@@ -1,0 +1,108 @@
+import argparse
+import sys
+
+from rich.console import Console
+from rich.table import Table
+
+from srs.db import get_connection, init_db, search_cards
+
+
+console = Console()
+
+
+def cmd_sync(args):
+    from srs.sync import sync_from_api, sync_from_file
+    if args.from_file:
+        sync_from_file(args.from_file)
+    else:
+        sync_from_api(full=args.full)
+
+
+def cmd_review(args):
+    from srs.review import run_review
+    run_review()
+
+
+def cmd_stats(args):
+    from srs.stats import show_stats
+    show_stats()
+
+
+def cmd_browse(args):
+    conn = get_connection()
+    init_db(conn)
+
+    query = " ".join(args.query) if args.query else ""
+    if not query:
+        cards = conn.execute("""
+            SELECT c.*, r.next_review, r.interval_days
+            FROM cards c JOIN reviews r ON c.id = r.card_id
+            ORDER BY c.position ASC LIMIT 50
+        """).fetchall()
+    else:
+        cards = search_cards(conn, query)
+
+    conn.close()
+
+    if not cards:
+        console.print("\n[bold yellow]No cards found.[/]")
+        return
+
+    table = Table(show_header=True, header_style="bold")
+    table.add_column("#", justify="right", style="dim")
+    table.add_column("Phrase")
+    table.add_column("Translation", style="cyan")
+    table.add_column("Next Review", style="yellow")
+    table.add_column("Interval", justify="right")
+
+    for card in cards:
+        interval = f"{card['interval_days']}d" if card["interval_days"] else "new"
+        table.add_row(
+            str(card["position"]),
+            card["phrase"],
+            card["translation_words"] or "",
+            card["next_review"],
+            interval,
+        )
+
+    console.print(f"\n[bold]{len(cards)} cards{'  (showing first 50)' if len(cards) == 50 else ''}[/]\n")
+    console.print(table)
+    console.print()
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        prog="srs",
+        description="Speakly Spaced Repetition System",
+    )
+    subparsers = parser.add_subparsers(dest="command")
+
+    # sync
+    sync_parser = subparsers.add_parser("sync", help="Sync words from Speakly")
+    sync_parser.add_argument("--from-file", help="Import from JSON file instead of API")
+    sync_parser.add_argument("--full", action="store_true", help="Fetch all pages (don't stop early on known cards)")
+    sync_parser.set_defaults(func=cmd_sync)
+
+    # review
+    review_parser = subparsers.add_parser("review", help="Start review session")
+    review_parser.set_defaults(func=cmd_review)
+
+    # stats
+    stats_parser = subparsers.add_parser("stats", help="Show learning statistics")
+    stats_parser.set_defaults(func=cmd_stats)
+
+    # browse
+    browse_parser = subparsers.add_parser("browse", help="Browse/search word bank")
+    browse_parser.add_argument("query", nargs="*", help="Search query")
+    browse_parser.set_defaults(func=cmd_browse)
+
+    args = parser.parse_args()
+    if not args.command:
+        parser.print_help()
+        sys.exit(0)
+
+    args.func(args)
+
+
+if __name__ == "__main__":
+    main()

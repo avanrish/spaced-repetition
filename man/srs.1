@@ -1,0 +1,136 @@
+.TH SRS 1 "March 2026" "srs 0.1.0" "User Commands"
+.SH NAME
+srs \- Speakly Spaced Repetition System
+.SH SYNOPSIS
+.B srs
+.I command
+.RI [ options ]
+.SH DESCRIPTION
+.B srs
+is a CLI tool that syncs your learned vocabulary from Speakly and provides
+spaced repetition review using the SM\-2 algorithm. Built for local use with
+a SQLite database.
+.PP
+On first sync, you will be prompted to paste a cURL command copied from your
+browser's devtools (Network tab). This provides the authentication headers
+needed to access the Speakly API. Headers are saved for subsequent syncs and
+automatically re\-prompted if the session expires.
+.SH COMMANDS
+.TP
+.B sync
+Fetch words from the Speakly API and store them locally. By default, stops
+early when a full page contains only already\-known cards. New cards are
+immediately available for review.
+.RS
+.TP
+.B \-\-full
+Fetch all pages without early stopping. Useful to update existing card data
+(translations, grammar tips).
+.TP
+.B \-\-from\-file \fIFILE\fR
+Import cards from a JSON file instead of the API. Accepts both a raw results
+array and the full API response format with a \fBresults\fR key.
+.RE
+.TP
+.B review
+Start an interactive review session. Shows all cards due today (where
+\fBnext_review <= today\fR), ordered oldest first.
+.RS
+.PP
+For each card:
+.IP 1. 3
+The German sentence is shown with hidden words replaced by underscores,
+along with the Polish translation hint.
+.IP 2. 3
+Press \fBEnter\fR to reveal the full sentence, translations, and
+per\-word meanings. Audio pronunciation plays automatically.
+.IP 3. 3
+Rate your recall:
+.RS
+.TP
+.B 1 (Again)
+Forgot completely. Card resets and comes back tomorrow.
+.TP
+.B 2 (Hard)
+Recalled with difficulty. Interval advances slowly.
+.TP
+.B 3 (Good)
+Normal recall. Interval follows standard SM\-2 progression.
+.TP
+.B 4 (Easy)
+Instant recall. Interval grows faster.
+.RE
+.TP
+.B r
+Replay the pronunciation audio.
+.TP
+.B q
+Quit the session. Progress on already\-rated cards is saved.
+.RE
+.TP
+.B stats
+Display learning statistics: total cards, cards due today, cards reviewed
+today, never\-reviewed cards, mature cards (interval >= 21 days), and a
+7\-day upcoming review forecast.
+.TP
+.B browse \fR[\fIquery\fR]
+Browse or search the word bank. Without a query, lists the first 50 cards
+ordered by Speakly position (frequency rank). With a query, searches across
+German phrases and Polish translations.
+.SH SM\-2 ALGORITHM
+The review system uses a standard SM\-2 spaced repetition algorithm.
+.PP
+.B Interval progression
+(when rating Good):
+.br
+1 day \(-> 6 days \(-> interval \(mu ease_factor \(-> ...
+.PP
+.B Ease factor
+starts at 2.5 and adjusts based on ratings. Minimum is 1.3. Easy ratings
+increase the factor; Again/Hard ratings decrease it.
+.PP
+Cards rated Again are reset to a 1\-day interval regardless of their
+previous progress.
+.SH FILES
+.TP
+.I ~/.speakly\-srs/srs.db
+SQLite database containing all cards and review state.
+.TP
+.I ~/.speakly\-srs/headers.json
+Saved HTTP headers parsed from the cURL command, used for API authentication.
+.TP
+.I ~/.speakly\-srs/config.json
+Optional configuration file. Supported keys:
+.RS
+.TP
+.B language_pair_id
+Speakly language pair ID (default: 15, German\-Polish).
+.TP
+.B daily_review_limit
+Maximum cards per review session (default: 100).
+.RE
+.SH EXAMPLES
+.TP
+First\-time sync:
+.B srs sync
+.br
+(Prompts for cURL command from browser devtools)
+.TP
+Full re\-sync of all cards:
+.B srs sync \-\-full
+.TP
+Import from a JSON file:
+.B srs sync \-\-from\-file words.json
+.TP
+Start a review session:
+.B srs review
+.TP
+Search for a word:
+.B srs browse Freund
+.TP
+View statistics:
+.B srs stats
+.SH AUTHORS
+Bartosz Lipinski
+.SH BUGS
+Report bugs at the project repository.

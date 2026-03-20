@@ -1,0 +1,42 @@
+#compdef srs
+
+_srs() {
+    local -a commands
+    commands=(
+        'sync:Fetch words from Speakly'
+        'review:Start review session'
+        'stats:Show learning statistics'
+        'browse:Browse/search word bank'
+    )
+
+    _arguments -C \
+        '1:command:->command' \
+        '*::arg:->args'
+
+    case $state in
+        command)
+            _describe 'command' commands
+            ;;
+        args)
+            case $words[1] in
+                sync)
+                    _arguments \
+                        '--from-file[Import from JSON file]:file:_files -g "*.json"' \
+                        '--full[Fetch all pages without early stopping]' \
+                        '(-h --help)'{-h,--help}'[Show help]'
+                    ;;
+                browse)
+                    _arguments \
+                        '*:query:' \
+                        '(-h --help)'{-h,--help}'[Show help]'
+                    ;;
+                review|stats)
+                    _arguments \
+                        '(-h --help)'{-h,--help}'[Show help]'
+                    ;;
+            esac
+            ;;
+    esac
+}
+
+_srs "$@"
