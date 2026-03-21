@@ -7,6 +7,7 @@ _srs() {
         'review:Start review session'
         'stats:Show learning statistics'
         'browse:Browse/search word bank'
+        'notify:Manage review reminders'
     )
 
     _arguments -C \
@@ -33,6 +34,32 @@ _srs() {
                 review|stats)
                     _arguments \
                         '(-h --help)'{-h,--help}'[Show help]'
+                    ;;
+                notify)
+                    local -a notify_commands
+                    notify_commands=(
+                        'on:Enable notifications'
+                        'off:Disable notifications'
+                        'status:Show notification settings'
+                    )
+                    _arguments -C \
+                        '1:notify command:->notify_command' \
+                        '*::notify arg:->notify_args'
+                    case $state in
+                        notify_command)
+                            _describe 'notify command' notify_commands
+                            ;;
+                        notify_args)
+                            case $words[1] in
+                                on)
+                                    _arguments \
+                                        '*--at[Reminder time (HH\:MM)]:time:' \
+                                        '--dry-run[Fire notification now without installing]' \
+                                        '(-h --help)'{-h,--help}'[Show help]'
+                                    ;;
+                            esac
+                            ;;
+                    esac
                     ;;
             esac
             ;;

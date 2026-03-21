@@ -55,11 +55,25 @@ srs browse             # List all cards
 srs browse Freund      # Search cards
 ```
 
+### Notifications
+
+Opt-in to macOS notifications that remind you when reviews are due.
+
+```bash
+srs notify on                    # Enable (default: daily at 09:00)
+srs notify on --at 09:00 --at 18:00  # Multiple reminder times
+srs notify on --dry-run          # Fire the notification now to test
+srs notify off                   # Disable
+srs notify status                # Show current settings
+```
+
+Uses a macOS LaunchAgent — reminders persist across reboots with no terminal required.
+
 ## Man page
 
 ```bash
 mkdir -p ~/.local/share/man/man1
-cp man/srs.1 ~/.local/share/man/man1/
+ln -sf "$(pwd)/man/srs.1" ~/.local/share/man/man1/
 man srs
 ```
 
@@ -67,7 +81,7 @@ man srs
 
 ```bash
 mkdir -p ~/.local/share/zsh/site-functions
-cp completions/_srs ~/.local/share/zsh/site-functions/
+ln -sf "$(pwd)/completions/_srs" ~/.local/share/zsh/site-functions/
 ```
 
 Add to `.zshrc` (before `source $ZSH/oh-my-zsh.sh` if using oh-my-zsh):
@@ -85,3 +99,5 @@ All data is stored in `~/.speakly-srs/`:
 | `srs.db` | SQLite database (cards + review state) |
 | `headers.json` | Saved API headers from cURL |
 | `config.json` | Optional config (language pair ID, limits) |
+| `notify.json` | Notification schedule config |
+| `notify.log` | Notification agent log output |

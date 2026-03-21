@@ -28,6 +28,22 @@ def cmd_stats(args):
     show_stats()
 
 
+def cmd_notify(args):
+    from srs.notify import notify_on, notify_off, notify_status, fire_notification
+    action = args.notify_action
+    if action == "on":
+        if args.dry_run:
+            fire_notification()
+            return
+        times = args.at if args.at else ["09:00"]
+        notify_on(times)
+    elif action == "off":
+        notify_off()
+    elif action == "status":
+        notify_status()
+
+
+
 def cmd_browse(args):
     conn = get_connection()
     init_db(conn)
@@ -96,9 +112,29 @@ def main():
     browse_parser.add_argument("query", nargs="*", help="Search query")
     browse_parser.set_defaults(func=cmd_browse)
 
+    # notify
+    notify_parser = subparsers.add_parser("notify", help="Manage review reminders")
+    notify_sub = notify_parser.add_subparsers(dest="notify_action")
+    notify_on_parser = notify_sub.add_parser("on", help="Enable notifications")
+    notify_on_parser.add_argument(
+        "--at", action="append", metavar="HH:MM",
+        help="Reminder time (can be repeated, default: 09:00)",
+    )
+    notify_on_parser.add_argument(
+        "--dry-run", action="store_true",
+        help="Fire the notification now without installing the schedule",
+    )
+    notify_sub.add_parser("off", help="Disable notifications")
+    notify_sub.add_parser("status", help="Show notification settings")
+    notify_parser.set_defaults(func=cmd_notify)
+
     args = parser.parse_args()
     if not args.command:
         parser.print_help()
+        sys.exit(0)
+
+    if args.command == "notify" and not getattr(args, "notify_action", None):
+        notify_parser.print_help()
         sys.exit(0)
 
     args.func(args)

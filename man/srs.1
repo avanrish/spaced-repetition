@@ -77,6 +77,28 @@ today, never\-reviewed cards, mature cards (interval >= 21 days), and a
 Browse or search the word bank. Without a query, lists the first 50 cards
 ordered by Speakly position (frequency rank). With a query, searches across
 German phrases and Polish translations.
+.TP
+.B notify on \fR[\fB\-\-at \fIHH:MM\fR] [\fB\-\-dry\-run\fR]
+Enable macOS notifications for pending reviews. Installs a LaunchAgent that
+fires at the specified times (default: 09:00). The \fB\-\-at\fR flag can be
+repeated for multiple daily reminders. Only sends a notification when cards
+are actually due.
+.RS
+.TP
+.B \-\-at \fIHH:MM\fR
+Set a reminder time. Can be specified multiple times (e.g.
+\fB\-\-at 09:00 \-\-at 18:00\fR). Default: 09:00.
+.TP
+.B \-\-dry\-run
+Fire the notification immediately without installing the schedule. Useful for
+testing.
+.RE
+.TP
+.B notify off
+Disable notifications. Removes the LaunchAgent and cleans up config.
+.TP
+.B notify status
+Show whether notifications are active and at what times.
 .SH SM\-2 ALGORITHM
 The review system uses a standard SM\-2 spaced repetition algorithm.
 .PP
@@ -98,6 +120,13 @@ SQLite database containing all cards and review state.
 .TP
 .I ~/.speakly\-srs/headers.json
 Saved HTTP headers parsed from the cURL command, used for API authentication.
+.TP
+.TP
+.I ~/.speakly\-srs/notify.json
+Notification schedule configuration (managed by \fBsrs notify on/off\fR).
+.TP
+.I ~/Library/LaunchAgents/com.speakly\-srs.notify.plist
+macOS LaunchAgent for scheduled notifications (managed by \fBsrs notify on/off\fR).
 .TP
 .I ~/.speakly\-srs/config.json
 Optional configuration file. Supported keys:
@@ -130,6 +159,12 @@ Search for a word:
 .TP
 View statistics:
 .B srs stats
+.TP
+Enable daily review reminders at 9am and 6pm:
+.B srs notify on \-\-at 09:00 \-\-at 18:00
+.TP
+Test the notification:
+.B srs notify on \-\-dry\-run
 .SH AUTHORS
 Bartosz Lipinski
 .SH BUGS
