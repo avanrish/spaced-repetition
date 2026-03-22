@@ -44,6 +44,28 @@ def cmd_notify(args):
 
 
 
+def cmd_config(args):
+    from srs.sync import get_config, CONFIG_PATH
+    import json, os
+
+    config = get_config()
+
+    if args.config_action == "typing":
+        if args.value == "on":
+            config["require_typing"] = True
+            console.print("[bold green]Typing mode enabled.[/] Cards with ease ≤ 2.5 will require typing.")
+        elif args.value == "off":
+            config["require_typing"] = False
+            console.print("[bold]Typing mode disabled.[/]")
+        os.makedirs(os.path.dirname(CONFIG_PATH), exist_ok=True)
+        with open(CONFIG_PATH, "w") as f:
+            json.dump(config, f, indent=2)
+
+    elif args.config_action is None:
+        typing_status = "on" if config.get("require_typing", False) else "off"
+        console.print(f"  require_typing: [bold]{typing_status}[/]")
+
+
 def cmd_browse(args):
     conn = get_connection()
     init_db(conn)
@@ -112,6 +134,13 @@ def main():
     browse_parser.add_argument("query", nargs="*", help="Search query")
     browse_parser.set_defaults(func=cmd_browse)
 
+    # config
+    config_parser = subparsers.add_parser("config", help="Manage settings")
+    config_sub = config_parser.add_subparsers(dest="config_action")
+    typing_parser = config_sub.add_parser("typing", help="Toggle typing mode for low-ease cards")
+    typing_parser.add_argument("value", choices=["on", "off"], help="Enable or disable typing mode")
+    config_parser.set_defaults(func=cmd_config)
+
     # notify
     notify_parser = subparsers.add_parser("notify", help="Manage review reminders")
     notify_sub = notify_parser.add_subparsers(dest="notify_action")
@@ -131,6 +160,10 @@ def main():
     args = parser.parse_args()
     if not args.command:
         parser.print_help()
+        sys.exit(0)
+
+    if args.command == "config" and not getattr(args, "config_action", None):
+        args.func(args)
         sys.exit(0)
 
     if args.command == "notify" and not getattr(args, "notify_action", None):

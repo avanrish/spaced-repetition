@@ -44,8 +44,18 @@ srs review
 - Press **Enter** to reveal the answer (audio plays automatically)
 - Rate your recall: **1** (Again), **2** (Hard), **3** (Good), **4** (Easy)
 - Press **r** to replay audio, **q** to quit
+- Cards with the same due date are randomized to prevent serial order effects
 
 When no cards are due, shows the next review date.
+
+#### Typing mode
+
+Opt-in to typing mode for active recall — instead of pressing Enter to reveal, you type the hidden words. Answers are shown inline with color-coded feedback (case-sensitive).
+
+```bash
+srs config typing on   # Enable
+srs config typing off  # Disable
+```
 
 ### Stats & browsing
 
@@ -53,6 +63,14 @@ When no cards are due, shows the next review date.
 srs stats              # Learning statistics
 srs browse             # List all cards
 srs browse Freund      # Search cards
+```
+
+### Configuration
+
+```bash
+srs config             # Show current settings
+srs config typing on   # Enable typing mode
+srs config typing off  # Disable typing mode
 ```
 
 ### Notifications
@@ -98,6 +116,6 @@ All data is stored in `~/.speakly-srs/`:
 |---|---|
 | `srs.db` | SQLite database (cards + review state) |
 | `headers.json` | Saved API headers from cURL |
-| `config.json` | Optional config (language pair ID, limits) |
+| `config.json` | Optional config (language pair ID, limits, typing mode) |
 | `notify.json` | Notification schedule config |
 | `notify.log` | Notification agent log output |

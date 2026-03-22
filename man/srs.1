@@ -34,7 +34,8 @@ array and the full API response format with a \fBresults\fR key.
 .TP
 .B review
 Start an interactive review session. Shows all cards due today (where
-\fBnext_review <= today\fR), ordered oldest first.
+\fBnext_review <= today\fR), ordered oldest first. Cards with the same
+review date are presented in random order.
 .RS
 .PP
 For each card:
@@ -44,6 +45,12 @@ along with the Polish translation hint.
 .IP 2. 3
 Press \fBEnter\fR to reveal the full sentence, translations, and
 per\-word meanings. Audio pronunciation plays automatically.
+.PP
+If \fBtyping mode\fR is enabled (see \fBsrs config typing on\fR), you
+will instead be prompted to type the hidden words (space\-separated).
+The sentence is then shown with your answers filled in \(em correct
+words in green, mistakes in red with the expected word.
+Comparison is case\-sensitive.
 .IP 3. 3
 Rate your recall:
 .RS
@@ -77,6 +84,16 @@ today, never\-reviewed cards, mature cards (interval >= 21 days), and a
 Browse or search the word bank. Without a query, lists the first 50 cards
 ordered by Speakly position (frequency rank). With a query, searches across
 German phrases and Polish translations.
+.TP
+.TP
+.B config
+Show current configuration settings.
+.TP
+.B config typing on\fR|\fBoff
+Enable or disable typing mode. When enabled, review cards prompt you to
+type the hidden words instead of pressing Enter to reveal. Your typed
+answers are shown inline in the sentence with color\-coded feedback.
+Settings are saved to \fI~/.speakly\-srs/config.json\fR.
 .TP
 .B notify on \fR[\fB\-\-at \fIHH:MM\fR] [\fB\-\-dry\-run\fR]
 Enable macOS notifications for pending reviews. Installs a LaunchAgent that
@@ -137,6 +154,10 @@ Speakly language pair ID (default: 15, German\-Polish).
 .TP
 .B daily_review_limit
 Maximum cards per review session (default: 100).
+.TP
+.B require_typing
+Enable typing mode for reviews (default: false). Managed via
+\fBsrs config typing on/off\fR.
 .RE
 .SH EXAMPLES
 .TP

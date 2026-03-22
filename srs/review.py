@@ -10,6 +10,7 @@ from rich.panel import Panel
 from rich.text import Text
 
 from srs.db import get_connection, init_db, get_due_cards, get_next_review_date, update_review
+from srs.sync import get_config
 
 console = Console()
 
@@ -102,6 +103,12 @@ def build_answer(card) -> Text:
     return text
 
 
+def get_hidden_words(card) -> list[str]:
+    """Return the list of hidden words in order."""
+    content = json.loads(card["content_json"])
+    return [item["word"] for item in content if not item["visible"]]
+
+
 def build_word_hints(card) -> list[str]:
     """Build per-word translation hints for hidden words."""
     content = json.loads(card["content_json"])
@@ -119,9 +126,50 @@ def build_word_hints(card) -> list[str]:
     return hints
 
 
+def build_typed_result(card, typed_words: list[str]) -> Text:
+    """Build the sentence with typed words filled in, color-coded green/red."""
+    content = json.loads(card["content_json"])
+    text = Text()
+    hidden_idx = 0
+    for i, item in enumerate(content):
+        if i > 0 and item["word"] not in (".", "!", "?", ",", ";", ":"):
+            text.append(" ")
+        if item["visible"]:
+            text.append(item["word"])
+        else:
+            expected = item["word"]
+            typed = typed_words[hidden_idx] if hidden_idx < len(typed_words) else ""
+            if typed == expected:
+                text.append(typed, style="bold green")
+            else:
+                text.append(f"{typed}→{expected}", style="bold red")
+            hidden_idx += 1
+    return text
+
+
+def prompt_typing(card) -> bool:
+    """Prompt user to type hidden words. Returns True if quit requested."""
+    hidden = get_hidden_words(card)
+    if not hidden:
+        return False
+
+    typed_input = input(f"  Type {len(hidden)} word{'s' if len(hidden) > 1 else ''}: ").strip()
+    if typed_input.lower() == "q":
+        return True
+
+    typed_words = typed_input.split()
+    result = build_typed_result(card, typed_words)
+    console.print(Panel(result, border_style="yellow", title="Your answer"))
+
+    return False
+
+
 def run_review():
     conn = get_connection()
     init_db(conn)
+
+    config = get_config()
+    typing_enabled = config.get("require_typing", False)
 
     cards = get_due_cards(conn)
     if not cards:
@@ -142,6 +190,7 @@ def run_review():
         # Question
         question = build_question(card)
         header = f"Card {i + 1}/{len(cards)}"
+        require_typing = typing_enabled
 
         q_panel = Text()
         q_panel.append(question)
@@ -151,9 +200,14 @@ def run_review():
 
         console.print(Panel(q_panel, title=header, border_style="blue"))
 
-        user_input = input("  [Enter to reveal, q to quit] ")
-        if user_input.strip().lower() == "q":
-            break
+        if require_typing:
+            quit_requested = prompt_typing(card)
+            if quit_requested:
+                break
+        else:
+            user_input = input("  [Enter to reveal, q to quit] ")
+            if user_input.strip().lower() == "q":
+                break
 
         # Answer — play audio on reveal
         play_audio(card["pronunciation_url"])
