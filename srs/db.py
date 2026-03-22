@@ -94,7 +94,7 @@ def get_due_cards(conn: sqlite3.Connection, limit: int = 100) -> list[sqlite3.Ro
         FROM cards c
         JOIN reviews r ON c.id = r.card_id
         WHERE r.next_review <= ?
-        ORDER BY r.next_review ASC, c.position ASC
+        ORDER BY r.next_review ASC, RANDOM()
         LIMIT ?
     """, (date.today().isoformat(), limit)).fetchall()
 
