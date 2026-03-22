@@ -87,19 +87,13 @@ srs notify status                # Show current settings
 
 Uses a macOS LaunchAgent — reminders persist across reboots with no terminal required.
 
-## Man page
+## Man page & zsh completions
+
+Run the install script to set up the man page and zsh completions:
 
 ```bash
-mkdir -p ~/.local/share/man/man1
-ln -sf "$(pwd)/man/srs.1" ~/.local/share/man/man1/
-man srs
-```
-
-## Zsh completions
-
-```bash
-mkdir -p ~/.local/share/zsh/site-functions
-ln -sf "$(pwd)/completions/_srs" ~/.local/share/zsh/site-functions/
+./scripts/install-extras.sh        # Symlink (updates live as you edit)
+./scripts/install-extras.sh --copy # Copy (standalone, no link to repo)
 ```
 
 Add to `.zshrc` (before `source $ZSH/oh-my-zsh.sh` if using oh-my-zsh):
