@@ -18,8 +18,14 @@ CONFIG_PATH = os.path.join(DB_DIR, "notify.json")
 
 
 def _srs_executable() -> str:
-    """Return the path to the srs executable."""
-    # Use the same Python that's running this process
+    """Return the path to the srs executable.
+
+    Prefer ~/.local/bin/srs (uv tool install) over the project-local .venv,
+    since launchd runs outside the project directory.
+    """
+    global_srs = os.path.expanduser("~/.local/bin/srs")
+    if os.path.exists(global_srs):
+        return global_srs
     return os.path.join(os.path.dirname(sys.executable), "srs")
 
 
