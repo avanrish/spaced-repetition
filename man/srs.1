@@ -95,6 +95,11 @@ type the hidden words instead of pressing Enter to reveal. Your typed
 answers are shown inline in the sentence with color\-coded feedback.
 Settings are saved to \fI~/.speakly\-srs/config.json\fR.
 .TP
+.B config skip\-new\-today on\fR|\fBoff
+Enable or disable skipping cards that were added today during review.
+When enabled, newly synced cards won't appear in the same day's review
+session, giving you a day before they first come up. Default: off.
+.TP
 .B notify on \fR[\fB\-\-at \fIHH:MM\fR] [\fB\-\-dry\-run\fR]
 Enable macOS notifications for pending reviews. Installs a LaunchAgent that
 fires at the specified times (default: 09:00). The \fB\-\-at\fR flag can be
@@ -158,6 +163,10 @@ Maximum cards per review session (default: 100).
 .B require_typing
 Enable typing mode for reviews (default: false). Managed via
 \fBsrs config typing on/off\fR.
+.TP
+.B skip_new_today
+Skip cards added today during review (default: false). Managed via
+\fBsrs config skip\-new\-today on/off\fR.
 .RE
 .SH EXAMPLES
 .TP

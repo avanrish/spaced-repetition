@@ -61,9 +61,22 @@ def cmd_config(args):
         with open(CONFIG_PATH, "w") as f:
             json.dump(config, f, indent=2)
 
+    elif args.config_action == "skip-new-today":
+        if args.value == "on":
+            config["skip_new_today"] = True
+            console.print("[bold green]Skip new today enabled.[/] Cards added today won't appear in reviews.")
+        elif args.value == "off":
+            config["skip_new_today"] = False
+            console.print("[bold]Skip new today disabled.[/]")
+        os.makedirs(os.path.dirname(CONFIG_PATH), exist_ok=True)
+        with open(CONFIG_PATH, "w") as f:
+            json.dump(config, f, indent=2)
+
     elif args.config_action is None:
         typing_status = "on" if config.get("require_typing", False) else "off"
-        console.print(f"  require_typing: [bold]{typing_status}[/]")
+        skip_new_status = "on" if config.get("skip_new_today", False) else "off"
+        console.print(f"  require_typing:  [bold]{typing_status}[/]")
+        console.print(f"  skip_new_today:  [bold]{skip_new_status}[/]")
 
 
 def cmd_browse(args):
@@ -139,6 +152,8 @@ def main():
     config_sub = config_parser.add_subparsers(dest="config_action")
     typing_parser = config_sub.add_parser("typing", help="Toggle typing mode for low-ease cards")
     typing_parser.add_argument("value", choices=["on", "off"], help="Enable or disable typing mode")
+    skip_new_parser = config_sub.add_parser("skip-new-today", help="Skip cards added today during review")
+    skip_new_parser.add_argument("value", choices=["on", "off"], help="Enable or disable skipping new cards")
     config_parser.set_defaults(func=cmd_config)
 
     # notify

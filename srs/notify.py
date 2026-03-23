@@ -146,9 +146,13 @@ def notify_status():
 
 def fire_notification():
     """Check for due cards and send a notification if any are pending."""
+    from srs.sync import get_config
+
     conn = get_connection()
     init_db(conn)
-    stats = get_stats(conn)
+    config = get_config()
+    skip_new_today = config.get("skip_new_today", False)
+    stats = get_stats(conn, skip_new_today=skip_new_today)
     conn.close()
 
     due = stats["due_today"]

@@ -2,6 +2,7 @@ from rich.console import Console
 from rich.table import Table
 
 from srs.db import get_connection, init_db, get_stats
+from srs.sync import get_config
 
 console = Console()
 
@@ -10,7 +11,9 @@ def show_stats():
     conn = get_connection()
     init_db(conn)
 
-    s = get_stats(conn)
+    config = get_config()
+    skip_new_today = config.get("skip_new_today", False)
+    s = get_stats(conn, skip_new_today=skip_new_today)
     conn.close()
 
     if s["total"] == 0:

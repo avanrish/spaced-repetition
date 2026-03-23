@@ -40,6 +40,7 @@ _srs() {
                     local -a config_commands
                     config_commands=(
                         'typing:Toggle typing mode (on/off)'
+                        'skip-new-today:Skip cards added today in reviews (on/off)'
                     )
                     _arguments -C \
                         '1:config command:->config_command' \
@@ -50,7 +51,7 @@ _srs() {
                             ;;
                         config_args)
                             case $words[1] in
-                                typing)
+                                typing|skip-new-today)
                                     _arguments \
                                         '1:value:(on off)'
                                     ;;

@@ -170,8 +170,9 @@ def run_review():
 
     config = get_config()
     typing_enabled = config.get("require_typing", False)
+    skip_new_today = config.get("skip_new_today", False)
 
-    cards = get_due_cards(conn)
+    cards = get_due_cards(conn, skip_new_today=skip_new_today)
     if not cards:
         next_date = get_next_review_date(conn)
         conn.close()

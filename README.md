@@ -68,9 +68,11 @@ srs browse Freund      # Search cards
 ### Configuration
 
 ```bash
-srs config             # Show current settings
-srs config typing on   # Enable typing mode
-srs config typing off  # Disable typing mode
+srs config                       # Show current settings
+srs config typing on             # Enable typing mode
+srs config typing off            # Disable typing mode
+srs config skip-new-today on     # Skip cards added today in reviews
+srs config skip-new-today off    # Include cards added today (default)
 ```
 
 ### Notifications
@@ -110,6 +112,6 @@ All data is stored in `~/.speakly-srs/`:
 |---|---|
 | `srs.db` | SQLite database (cards + review state) |
 | `headers.json` | Saved API headers from cURL |
-| `config.json` | Optional config (language pair ID, limits, typing mode) |
+| `config.json` | Optional config (language pair ID, limits, typing mode, skip-new-today) |
 | `notify.json` | Notification schedule config |
 | `notify.log` | Notification agent log output |

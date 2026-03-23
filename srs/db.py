@@ -88,7 +88,19 @@ def upsert_card(conn: sqlite3.Connection, item: dict) -> bool:
     return is_new
 
 
-def get_due_cards(conn: sqlite3.Connection, limit: int = 100) -> list[sqlite3.Row]:
+def get_due_cards(conn: sqlite3.Connection, limit: int = 100,
+                   skip_new_today: bool = False) -> list[sqlite3.Row]:
+    today = date.today().isoformat()
+    if skip_new_today:
+        return conn.execute("""
+            SELECT c.*, r.ease_factor, r.interval_days, r.repetitions, r.next_review, r.last_reviewed
+            FROM cards c
+            JOIN reviews r ON c.id = r.card_id
+            WHERE r.next_review <= ?
+              AND DATE(c.created_at) != ?
+            ORDER BY r.next_review ASC, RANDOM()
+            LIMIT ?
+        """, (today, today, limit)).fetchall()
     return conn.execute("""
         SELECT c.*, r.ease_factor, r.interval_days, r.repetitions, r.next_review, r.last_reviewed
         FROM cards c
@@ -96,7 +108,7 @@ def get_due_cards(conn: sqlite3.Connection, limit: int = 100) -> list[sqlite3.Ro
         WHERE r.next_review <= ?
         ORDER BY r.next_review ASC, RANDOM()
         LIMIT ?
-    """, (date.today().isoformat(), limit)).fetchall()
+    """, (today, limit)).fetchall()
 
 
 def get_next_review_date(conn: sqlite3.Connection) -> str | None:
@@ -121,12 +133,20 @@ def update_review(conn: sqlite3.Connection, card_id: int,
     conn.commit()
 
 
-def get_stats(conn: sqlite3.Connection) -> dict:
+def get_stats(conn: sqlite3.Connection, skip_new_today: bool = False) -> dict:
     total = conn.execute("SELECT COUNT(*) FROM cards").fetchone()[0]
-    due_today = conn.execute(
-        "SELECT COUNT(*) FROM reviews WHERE next_review <= ?",
-        (date.today().isoformat(),)
-    ).fetchone()[0]
+    today = date.today().isoformat()
+    if skip_new_today:
+        due_today = conn.execute(
+            "SELECT COUNT(*) FROM reviews r JOIN cards c ON c.id = r.card_id "
+            "WHERE r.next_review <= ? AND DATE(c.created_at) != ?",
+            (today, today)
+        ).fetchone()[0]
+    else:
+        due_today = conn.execute(
+            "SELECT COUNT(*) FROM reviews WHERE next_review <= ?",
+            (today,)
+        ).fetchone()[0]
     reviewed_today = conn.execute(
         "SELECT COUNT(*) FROM reviews WHERE last_reviewed = ?",
         (date.today().isoformat(),)
