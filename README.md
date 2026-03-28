@@ -52,6 +52,13 @@ When no cards are due, shows the next review date.
 
 Opt-in to typing mode for active recall — instead of pressing Enter to reveal, you type the hidden words. Answers are shown inline with color-coded feedback (case-sensitive).
 
+When typing mode is enabled, your rating is **auto-determined** from accuracy:
+- **All correct** → Good (3)
+- **Some correct** → Hard (2)
+- **None correct** → Again (1)
+
+You can override the auto-rating by pressing 1-4 instead of Enter.
+
 ```bash
 srs config typing on   # Enable
 srs config typing off  # Disable

@@ -147,21 +147,33 @@ def build_typed_result(card, typed_words: list[str]) -> Text:
     return text
 
 
-def prompt_typing(card) -> bool:
-    """Prompt user to type hidden words. Returns True if quit requested."""
+def compute_typing_rating(hidden: list[str], typed_words: list[str]) -> int:
+    """Derive SM-2 rating from typing accuracy. Returns 1 (Again), 2 (Hard), or 3 (Good)."""
+    correct = sum(1 for exp, got in zip(hidden, typed_words) if exp == got)
+    total = len(hidden)
+    if correct == total and len(typed_words) == total:
+        return 3  # Good
+    elif correct > 0:
+        return 2  # Hard
+    return 1  # Again
+
+
+def prompt_typing(card) -> tuple[bool, int | None]:
+    """Prompt user to type hidden words. Returns (quit_requested, auto_rating)."""
     hidden = get_hidden_words(card)
     if not hidden:
-        return False
+        return False, None
 
     typed_input = input(f"  Type {len(hidden)} word{'s' if len(hidden) > 1 else ''}: ").strip()
     if typed_input.lower() == "q":
-        return True
+        return True, None
 
     typed_words = typed_input.split()
     result = build_typed_result(card, typed_words)
     console.print(Panel(result, border_style="yellow", title="Your answer"))
 
-    return False
+    rating = compute_typing_rating(hidden, typed_words)
+    return False, rating
 
 
 def run_review():
@@ -201,8 +213,9 @@ def run_review():
 
         console.print(Panel(q_panel, title=header, border_style="blue"))
 
+        auto_rating = None
         if require_typing:
-            quit_requested = prompt_typing(card)
+            quit_requested, auto_rating = prompt_typing(card)
             if quit_requested:
                 break
         else:
@@ -230,17 +243,28 @@ def run_review():
                 a_panel.append(hint + "\n", style="dim")
 
         a_panel.append("\n")
-        a_panel.append("1: Again  ", style="bold red")
-        a_panel.append("2: Hard  ", style="bold yellow")
-        a_panel.append("3: Good  ", style="bold blue")
-        a_panel.append("4: Easy  ", style="bold green")
-        a_panel.append("r: Replay audio", style="dim")
+        if auto_rating is not None:
+            rating_labels = {1: ("Again", "bold red"), 2: ("Hard", "bold yellow"), 3: ("Good", "bold blue")}
+            label, style = rating_labels[auto_rating]
+            a_panel.append("Auto-rated: ", style="dim")
+            a_panel.append(f"{label} ({auto_rating})", style=style)
+            a_panel.append("  ")
+            a_panel.append("[Enter to accept, 1-4 to override, r=replay, q=quit]", style="dim")
+        else:
+            a_panel.append("1: Again  ", style="bold red")
+            a_panel.append("2: Hard  ", style="bold yellow")
+            a_panel.append("3: Good  ", style="bold blue")
+            a_panel.append("4: Easy  ", style="bold green")
+            a_panel.append("r: Replay audio", style="dim")
 
         console.print(Panel(a_panel, title=header, border_style="green"))
 
         # Get rating
         while True:
-            rating_input = input("  Rating (1-4, r=replay, q=quit): ").strip().lower()
+            if auto_rating is not None:
+                rating_input = input("  Rating [Enter=accept, 1-4, r=replay, q=quit]: ").strip().lower()
+            else:
+                rating_input = input("  Rating (1-4, r=replay, q=quit): ").strip().lower()
             if rating_input == "q":
                 conn.close()
                 console.print(f"\n[bold]Session ended. Reviewed {reviewed} cards.[/]")
@@ -248,10 +272,16 @@ def run_review():
             if rating_input == "r":
                 play_audio(card["pronunciation_url"])
                 continue
+            if rating_input == "" and auto_rating is not None:
+                rating = auto_rating
+                break
             if rating_input in ("1", "2", "3", "4"):
                 rating = int(rating_input)
                 break
-            console.print("  [red]Enter 1, 2, 3, 4, r, or q[/]")
+            if auto_rating is not None:
+                console.print("  [red]Press Enter to accept, or enter 1-4, r, or q[/]")
+            else:
+                console.print("  [red]Enter 1, 2, 3, 4, r, or q[/]")
 
         # Update SM-2
         new_ease, new_interval, new_reps = sm2(
