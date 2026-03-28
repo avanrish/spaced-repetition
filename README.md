@@ -53,7 +53,7 @@ When no cards are due, shows the next review date.
 Opt-in to typing mode for active recall — instead of pressing Enter to reveal, you type the hidden words. Answers are shown inline with color-coded feedback (case-sensitive).
 
 When typing mode is enabled, your rating is **auto-determined** from accuracy:
-- **All correct** → Good (3)
+- **All correct** → Good (3), or Easy (4) if you have a 3+ correct streak on this card
 - **Some correct** → Hard (2)
 - **None correct** → Again (1)
 

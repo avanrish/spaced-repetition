@@ -147,19 +147,19 @@ def build_typed_result(card, typed_words: list[str]) -> Text:
     return text
 
 
-def compute_typing_rating(hidden: list[str], typed_words: list[str]) -> int:
-    """Derive SM-2 rating from typing accuracy. Returns 1 (Again), 2 (Hard), or 3 (Good)."""
+def compute_typing_rating(hidden: list[str], typed_words: list[str], repetitions: int) -> int:
+    """Derive SM-2 rating from typing accuracy and streak. Returns 1-4."""
     correct = sum(1 for exp, got in zip(hidden, typed_words) if exp == got)
     total = len(hidden)
     if correct == total and len(typed_words) == total:
-        return 3  # Good
+        return 4 if repetitions >= 3 else 3  # Easy if 3+ streak, else Good
     elif correct > 0:
         return 2  # Hard
     return 1  # Again
 
 
-def prompt_typing(card) -> tuple[bool, int | None]:
-    """Prompt user to type hidden words. Returns (quit_requested, auto_rating)."""
+def prompt_typing(card) -> tuple[bool, tuple[list[str], list[str]] | None]:
+    """Prompt user to type hidden words. Returns (quit_requested, (hidden, typed) or None)."""
     hidden = get_hidden_words(card)
     if not hidden:
         return False, None
@@ -172,8 +172,7 @@ def prompt_typing(card) -> tuple[bool, int | None]:
     result = build_typed_result(card, typed_words)
     console.print(Panel(result, border_style="yellow", title="Your answer"))
 
-    rating = compute_typing_rating(hidden, typed_words)
-    return False, rating
+    return False, (hidden, typed_words)
 
 
 def run_review():
@@ -215,9 +214,12 @@ def run_review():
 
         auto_rating = None
         if require_typing:
-            quit_requested, auto_rating = prompt_typing(card)
+            quit_requested, typing_result = prompt_typing(card)
             if quit_requested:
                 break
+            if typing_result:
+                hidden, typed_words = typing_result
+                auto_rating = compute_typing_rating(hidden, typed_words, card["repetitions"])
         else:
             user_input = input("  [Enter to reveal, q to quit] ")
             if user_input.strip().lower() == "q":
@@ -244,7 +246,7 @@ def run_review():
 
         a_panel.append("\n")
         if auto_rating is not None:
-            rating_labels = {1: ("Again", "bold red"), 2: ("Hard", "bold yellow"), 3: ("Good", "bold blue")}
+            rating_labels = {1: ("Again", "bold red"), 2: ("Hard", "bold yellow"), 3: ("Good", "bold blue"), 4: ("Easy", "bold green")}
             label, style = rating_labels[auto_rating]
             a_panel.append("Auto-rated: ", style="dim")
             a_panel.append(f"{label} ({auto_rating})", style=style)
