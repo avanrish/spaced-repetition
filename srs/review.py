@@ -182,6 +182,7 @@ def run_review():
     config = get_config()
     typing_enabled = config.get("require_typing", False)
     skip_new_today = config.get("skip_new_today", False)
+    max_interval = config.get("max_interval")
 
     cards = get_due_cards(conn, skip_new_today=skip_new_today)
     if not cards:
@@ -292,6 +293,8 @@ def run_review():
             card["interval_days"],
             card["repetitions"],
         )
+        if max_interval and new_interval > max_interval:
+            new_interval = max_interval
         next_review = (date.today() + timedelta(days=new_interval)).isoformat()
 
         update_review(conn, card["id"], new_ease, new_interval, new_reps, next_review)

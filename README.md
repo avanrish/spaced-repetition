@@ -80,6 +80,8 @@ srs config typing on             # Enable typing mode
 srs config typing off            # Disable typing mode
 srs config skip-new-today on     # Skip cards added today in reviews
 srs config skip-new-today off    # Include cards added today (default)
+srs config max-interval 30       # Cap review intervals at 30 days
+srs config max-interval off      # Remove interval cap (default)
 ```
 
 ### Notifications
@@ -119,6 +121,6 @@ All data is stored in `~/.speakly-srs/`:
 |---|---|
 | `srs.db` | SQLite database (cards + review state) |
 | `headers.json` | Saved API headers from cURL |
-| `config.json` | Optional config (language pair ID, limits, typing mode, skip-new-today) |
+| `config.json` | Optional config (language pair ID, limits, typing mode, skip-new-today, max-interval) |
 | `notify.json` | Notification schedule config |
 | `notify.log` | Notification agent log output |

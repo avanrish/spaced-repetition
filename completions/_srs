@@ -41,6 +41,7 @@ _srs() {
                     config_commands=(
                         'typing:Toggle typing mode (on/off)'
                         'skip-new-today:Skip cards added today in reviews (on/off)'
+                        'max-interval:Cap maximum review interval (days or off)'
                     )
                     _arguments -C \
                         '1:config command:->config_command' \
@@ -54,6 +55,10 @@ _srs() {
                                 typing|skip-new-today)
                                     _arguments \
                                         '1:value:(on off)'
+                                    ;;
+                                max-interval)
+                                    _arguments \
+                                        '1:value:'
                                     ;;
                             esac
                             ;;

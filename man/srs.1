@@ -104,6 +104,11 @@ Enable or disable skipping cards that were added today during review.
 When enabled, newly synced cards won't appear in the same day's review
 session, giving you a day before they first come up. Default: off.
 .TP
+.B config max\-interval \fIDAYS\fR|\fBoff
+Cap the maximum review interval. When set, SM\-2 intervals are clamped
+to this value, preventing cards from drifting too far into the future.
+Accepts a positive integer (days) or \fBoff\fR to disable. Default: off.
+.TP
 .B notify on \fR[\fB\-\-at \fIHH:MM\fR] [\fB\-\-dry\-run\fR]
 Enable macOS notifications for pending reviews. Installs a LaunchAgent that
 fires at the specified times (default: 09:00). The \fB\-\-at\fR flag can be
@@ -171,6 +176,10 @@ Enable typing mode for reviews (default: false). Managed via
 .B skip_new_today
 Skip cards added today during review (default: false). Managed via
 \fBsrs config skip\-new\-today on/off\fR.
+.TP
+.B max_interval
+Maximum review interval in days (default: none). Managed via
+\fBsrs config max\-interval <days>/off\fR.
 .RE
 .SH EXAMPLES
 .TP

@@ -72,11 +72,32 @@ def cmd_config(args):
         with open(CONFIG_PATH, "w") as f:
             json.dump(config, f, indent=2)
 
+    elif args.config_action == "max-interval":
+        if args.value == "off":
+            config.pop("max_interval", None)
+            console.print("[bold]Max interval cap disabled.[/] Intervals will grow without limit.")
+        else:
+            try:
+                days = int(args.value)
+                if days < 1:
+                    raise ValueError
+            except ValueError:
+                console.print("[bold red]Invalid value.[/] Provide a positive integer (days) or 'off'.")
+                sys.exit(1)
+            config["max_interval"] = days
+            console.print(f"[bold green]Max interval set to {days} days.[/] Review intervals won't exceed this.")
+        os.makedirs(os.path.dirname(CONFIG_PATH), exist_ok=True)
+        with open(CONFIG_PATH, "w") as f:
+            json.dump(config, f, indent=2)
+
     elif args.config_action is None:
         typing_status = "on" if config.get("require_typing", False) else "off"
         skip_new_status = "on" if config.get("skip_new_today", False) else "off"
+        max_interval = config.get("max_interval")
+        max_interval_status = f"{max_interval} days" if max_interval else "off"
         console.print(f"  require_typing:  [bold]{typing_status}[/]")
         console.print(f"  skip_new_today:  [bold]{skip_new_status}[/]")
+        console.print(f"  max_interval:    [bold]{max_interval_status}[/]")
 
 
 def cmd_browse(args):
@@ -154,6 +175,8 @@ def main():
     typing_parser.add_argument("value", choices=["on", "off"], help="Enable or disable typing mode")
     skip_new_parser = config_sub.add_parser("skip-new-today", help="Skip cards added today during review")
     skip_new_parser.add_argument("value", choices=["on", "off"], help="Enable or disable skipping new cards")
+    max_interval_parser = config_sub.add_parser("max-interval", help="Cap maximum review interval in days")
+    max_interval_parser.add_argument("value", help="Maximum interval in days (positive integer), or 'off' to disable")
     config_parser.set_defaults(func=cmd_config)
 
     # notify
